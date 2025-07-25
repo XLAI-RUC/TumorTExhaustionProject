@@ -1,0 +1,51 @@
+clc; clear; close all;
+
+par = setparameter();
+
+par.epl = 0.01;
+
+rho_Vec = 0.01:0.001:0.15;      % rho
+length_r = length(rho_Vec);
+var_Vec = linspace(6,12,length_r);    % delta
+
+C_matrix = zeros(length_r,length_r); 
+T1_matrix = zeros(length_r,length_r);  
+
+t_span = [0 1000];
+options = odeset('RelTol', 1e-6, 'AbsTol', [1e-5,1e-5,1e-5,1e-5]); 
+
+y0 = [2e9,5e3,1e7,1e5];
+%  y0 = [1e2,5e3,1e7,1e2];
+
+for ii = 1:length_r
+    par.delta = var_Vec(ii);
+    for jj = 1:length_r
+        par.rho = rho_Vec(jj);
+        
+        [t, y] = ode45(@(t,y) ODE_control(t,y,par), t_span,y0, options);  %解微分方程
+        
+        C_matrix(ii,jj) = y(end,1);
+        T1_matrix(ii,jj) = y(end,3);
+    end
+end
+
+subplot(1,2,1)
+surf(var_Vec,rho_Vec, C_matrix)
+xlabel('\epsilon');
+ylabel('\rho');
+zlabel('C')
+
+subplot(1,2,2)
+surf(var_Vec,rho_Vec, T1_matrix)
+xlabel('\epsilon');
+ylabel('\rho');
+zlabel('T_1')
+
+%% Save data
+File_folder_name = 'output/3D/epl_0p01/'; 
+dlmwrite([File_folder_name, 'Bifur_rho_delta_C_1.dat'],C_matrix,' ');
+dlmwrite([File_folder_name, 'Bifur_rho_delta_T1_1.dat'],T1_matrix,' ');
+
+
+
+
